@@ -29,7 +29,8 @@ def main():
         name="Tarot of the Hours Product Page",
         url="https://www.etsy.com/uk/listing/774143958/tarot-of-the-hours?ref=shop_home_active_1",
         smtp_username="lain.proliant@gmail.com",
-        smtp_password=smtp_password)
+        smtp_password=smtp_password,
+        to_addrs=['lain.proliant@gmail.com', 'jenna.m.musgrove@gmail.com'])
 
     watch(config, scanner)
 
