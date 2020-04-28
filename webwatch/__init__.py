@@ -6,4 +6,6 @@
 #
 # Distributed under terms of the MIT license.
 # --------------------------------------------------------------------
-#
+from .script import Config, watch
+
+__all__ = ["Config", "watch"]
