@@ -31,6 +31,9 @@ class Config:
     from_addr: Optional[str] = None
     to_addrs: Optional[List[str]] = None
     timeout: int = 60
+    activated_subject: str = "Watcher has been activated: {name}"
+    activated_contents: str = ("The watcher will continuously scan the page and "
+                               "email you again when it finds what you're looking for.")
     subject: str = "Page has been updated: {name}"
     contents: str = "Click here to check the page: {url}"
     smtp_host: str = "smtp.gmail.com"
@@ -52,7 +55,24 @@ class Config:
 
 
 # --------------------------------------------------------------------
+def send_message(config: Config, msg: MIMEText):
+    print(msg)
+    server = smtplib.SMTP(config.smtp_host, config.smtp_port)
+    server.starttls()
+    server.login(config.smtp_username, config.smtp_password)
+    server.sendmail(config.from_address, config.to_addresses, msg.as_string())
+    server.quit()
+
+
+# --------------------------------------------------------------------
 def watch(config: Config, scanner: Callable[[BeautifulSoup], bool]):
+    # Send activated message.
+    activated_msg = MIMEText(config.activated_contents.format(**config.__dict__))
+    activated_msg['Subject'] = config.activated_subject.format(**config.__dict__)
+    activated_msg['From'] = config.from_address
+    activated_msg['To'] = ', '.join(config.to_addresses)
+    send_message(config, activated_msg)
+
     while True:
         response = requests.get(config.url, headers=config.headers)
         soup = BeautifulSoup(response.text, "lxml")
@@ -65,17 +85,13 @@ def watch(config: Config, scanner: Callable[[BeautifulSoup], bool]):
             server.starttls()
 
             # add account login name and password
-            server.login(config.smtp_username, config.smtp_password)
 
             msg = MIMEText(config.contents.format(**config.__dict__))
             msg['Subject'] = config.subject.format(**config.__dict__)
             msg['From'] = config.from_address
             msg['To'] = ', '.join(config.to_addresses)
 
-            print(msg)
-
-            server.sendmail(config.from_address, config.to_addresses, msg.as_string())
-            server.quit()
+            send_message(config, msg)
             return
 
         time.sleep(config.timeout)
